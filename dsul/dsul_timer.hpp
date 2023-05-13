@@ -1,5 +1,4 @@
 // DSUL - Disturb State USB Light : DsulTimer class
-
 class DsulTimer {
 public:
   uint32_t Interval;

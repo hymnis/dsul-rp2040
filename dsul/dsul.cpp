@@ -1,13 +1,9 @@
 // DSUL - Disturb State USB Light : RP2040 Firmware
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include "pico/stdio.h"
-#include "pico/time.h"
-#include "hardware/gpio.h"
-#include <tusb.h>
-#include "dsul_patterns.h"
-#include "dsul_timer.h"
+#include "class/cdc/cdc_device.h"
+#include "dsul_dot.hpp"
+#include "dsul_timer.hpp"
 
 // Version //
 #define MAJOR 0
@@ -26,7 +22,7 @@
 #endif
 
 #define NUMPIXELS  1   // Number of NeoPixels
-#define BRIGHT_MIN 10  // Minimum brightness level
+#define BRIGHT_MIN 0   // Minimum brightness level
 #define BRIGHT_MAX 120 // Maximum brightness level
 
 // Macro for constraining numerical values from input
@@ -45,7 +41,7 @@ bool color_reset = false;
 
 void dotComplete();
 void heartbeatComplete();
-DsulPatterns Dot(NUMPIXELS, NEOPIN, NEO_GRB + NEO_KHZ800, &dotComplete);
+DsulDot Dot(NUMPIXELS, NEOPIN, NEO_GRB + NEO_KHZ800, &dotComplete);
 DsulTimer Heartbeat(1000 * host_timeout, &heartbeatComplete);
 
 void dotSetup() {
@@ -67,7 +63,7 @@ void setShowMode() {
     Dot.ActivePattern = NONE;
     Dot.Color1 = Dot.Color(0, 0, 0);
   } else if (show_mode == 1) { // solid mode
-    Dot.Solid(show_color);
+    Dot.Solid(show_color, show_brightness);
   } else if (show_mode == 2) { // blink mode
     Dot.Blink(show_color, 500);
   } else if (show_mode == 3) { // flash mode
@@ -234,58 +230,51 @@ void handleInput() {
   resetInput();
 }
 
+// Run main program
 int main() {
-    stdio_init_all();
-    dotSetup();
-    while (!tud_cdc_connected()) { sleep_ms(100); } // wait for usb to initialize
-  #ifdef RASPBERRYPI_PICO
-    printf("Board: ");
-    printf("Arduino QT PY");
-  #endif
-  #ifdef ADAFRUIT_QTPY_RP2040
-    printf("Board: ");
-    printf("Arduino QT PY");
-  #endif
-    
-    // start main loop
-    while (true) {
-        Heartbeat.Update();
-        Dot.Update();
+  stdio_init_all();
+  dotSetup();
 
-        if (wait_state) {
-            // wait for host connection
-            // cycle LED colors while waiting
-            Dot.ActivePattern = RAINBOW;
-            Dot.Interval = 45;
-            Dot.TotalSteps = 255;
-        } else {
-            if (color_reset == true) {
-                // wait is over. continue from last mode and color
-                color_reset = false;
-                setShowMode();
-                setDimMode();
-            }
-        }
+  // start main loop
+  while (true) {
+    Heartbeat.Update();
+    Dot.Update();
 
-        int input;
-        while ((input = tud_cdc_read_char()) != -1) {
-            // reading char into 'c'
-            if (input == 35) { // #
-              // sequence complete
-              handleInput();
-            } else {
-              // receiving data
-              if (input_count > 13) {
-                // received more chars than we should. abort
-                sendNOK();
-                resetInput();
-              } else {
-                input_string[input_count] = input;
-                input_count += 1;
-              }
-            }
+    if (wait_state) {
+        // wait for host connection
+        // cycle LED colors while waiting
+        Dot.ActivePattern = RAINBOW;
+        Dot.Interval = 45;
+        Dot.TotalSteps = 255;
+    } else {
+        if (color_reset == true) {
+            // wait is over. continue from last mode and color
+            color_reset = false;
+            setShowMode();
+            setDimMode();
         }
     }
 
-    return 0;
-};
+    if (tud_cdc_connected()) {
+      int input;
+      while ((input = tud_cdc_read_char()) != -1) {
+        if (input == 35) { // #
+          // sequence complete
+          handleInput();
+        } else {
+          // receiving data
+          if (input_count > 13) {
+            // received more chars than we should. abort
+            sendNOK();
+            resetInput();
+          } else {
+            input_string[input_count] = input;
+            input_count += 1;
+          }
+        }
+      }
+    } else {
+      wait_state = true;
+    }
+  }
+}

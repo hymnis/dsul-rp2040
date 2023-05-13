@@ -8,16 +8,16 @@ The goal of the project is to have a USB connected light, that can be be set to 
 
 ## Hardware
 
-The hardware used is an Raspberry Pi Pico (W) connected to a NeoPixel module.
+The hardware used is an Raspberry Pi 2040 baed board (like Raspberry Pico or Adafruit QT PY) connected to a NeoPixel module.
 
 Automated builds using [Github Actions](https://github.com/hymnis/dsul-rp2040/actions).
 
-Since there are both hardware (current) and software (RAM) limitations to how many LED's/NeoPixel can be handled at once by the RPi Pico, it's important to first check the specifications and calculate the maximum number that can be used.
+Since there are both hardware (current) and software (RAM) limitations to how many LED's/NeoPixel can be handled at once, it's important to first check the board specifications and calculate the maximum number that can be used.
 
 
 ## Firmware
 
-It's possible to adjust the number of LED's used by editing the `NUMPIXELS` variable. Keep in mind how much RAM the RPi Pico has available. `NEOPIN` holds the pin number for where the NeoPixel module has been connected.
+It's possible to adjust the number of LED's used by editing the `NUMPIXELS` variable. Keep in mind how much RAM the board has available. `NEOPIN` holds the pin number for where the NeoPixel module has been connected.
 
 ### Dependencies
 

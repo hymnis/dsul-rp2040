@@ -1,10 +1,10 @@
-// DSUL - Disturb State USB Light : DsulPatterns class
+// DSUL - Disturb State USB Light : DsulDot class
 #include "Adafruit_NeoPixel.hpp"
 
 enum pattern { NONE, RAINBOW, SOLID, BLINK, PULSE };
 enum direction { FORWARD, REVERSE };
 
-class DsulPatterns : public Adafruit_NeoPixel {
+class DsulDot : public Adafruit_NeoPixel {
 public:
   pattern ActivePattern;
   direction Direction;
@@ -21,7 +21,7 @@ public:
 
   void (*OnComplete)();
 
-  DsulPatterns(uint16_t pixels, uint8_t pin, uint8_t type, void (*callback)())
+  DsulDot(uint16_t pixels, uint8_t pin, uint8_t type, void (*callback)())
       : Adafruit_NeoPixel(pixels, pin, type) {
     OnComplete = callback;
     Dim = false;
@@ -35,16 +35,16 @@ public:
       lastUpdate = to_ms_since_boot (get_absolute_time());
       switch (ActivePattern) {
         case RAINBOW:
-          //RainbowUpdate();
+          RainbowUpdate();
           break;
         case SOLID:
-          //SolidUpdate();
+          SolidUpdate();
           break;
         case BLINK:
-          //BlinkUpdate();
+          BlinkUpdate();
           break;
         case PULSE:
-          //PulseUpdate();
+          PulseUpdate();
           break;
         default:
           break;
@@ -95,6 +95,7 @@ public:
 
   // Update the Rainbow pattern
   void RainbowUpdate() {
+    setBrightness(20);
     for (int i = 0; i < numPixels(); i++) {
       uint32_t color = Wheel(((i * 256 / numPixels()) + Index) & 255);
       if (Dim) {
@@ -107,13 +108,15 @@ public:
   }
 
   // Initialize for Solid pattern
-  void Solid(uint32_t color1) {
+  void Solid(uint32_t color1, uint16_t brightness) {
     ActivePattern = SOLID;
     Color1 = color1;
+    BrightnessHigh = brightness;
   }
 
   // Update the Solid pattern
   void SolidUpdate() {
+    setBrightness(BrightnessHigh);
     ColorSet(Color1);
     show();
   }
@@ -124,7 +127,7 @@ public:
     Interval = interval;
     TotalSteps = 2;
     Color1 = color;
-    BrightnessLow = 10;
+    BrightnessLow = 0;
     BrightnessHigh = 100;
     Index = 0;
     Direction = FORWARD;

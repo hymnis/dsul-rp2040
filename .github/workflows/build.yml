@@ -1,0 +1,36 @@
+name: Build
+run-name: ${{ github.actor }} is building and testing dsul-rp2040
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - "**.md"
+      - "**.sh"
+      - "**.yaml"
+  pull_request:
+    branches:
+      - main
+      - "feature/*"
+    paths-ignore:
+      - "**.md"
+      - "**.sh"
+      - "**.yaml"
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build DSUL
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Compile code
+        run: |
+          cd dsul
+          mkdir -p build
+          cd build 
+          cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=1 .. 
+          make
+
