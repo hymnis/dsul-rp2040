@@ -1,0 +1,13 @@
+.cache/
+.vscode/
+html/
+build/
+Doxyfile
+Doxyfile.bak
+doxygen_sqlite3.db
+todo.md
+*.hex
+*.elf
+*.bin
+*.eep
+*.uf2
