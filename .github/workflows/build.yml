@@ -1,5 +1,5 @@
 name: Build
-run-name: ${{ github.actor }} is building and testing dsul-rp2040
+run-name: ${{ github.actor }} is building dsul-rp2040
 
 on:
   push:
@@ -20,17 +20,55 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
-    name: Build DSUL
+  prepare:
+    name: Get source code
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout Pico SDK
+        uses: actions/checkout@v3
+        with:
+          repository: raspberrypi/pico-sdk
+          ref: refs/heads/master
+          path: pico-sdk
+          submodules: true
+      - name: Cached build artifacts
+        uses: actions/cache/save@v3
+        id: buildcache-save
+        with:
+          path: pico-sdk
+          key: buildcache${{ github.run_number}}
+  build:
+    name: Build DSUL
+    needs: prepare
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        board:
+          - pico
+          - pico_w
+          - adafruit_qtpy_rp2040
+    steps:
+      - name: Install dependencies
+        shell: bash
+        run: |
+          sudo apt install cmake gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
       - name: Checkout code
         uses: actions/checkout@v3
+      - name: Cached build artifacts
+        uses: actions/cache/restore@v3
+        id: buildcache-restore
+        with:
+          path: pico-sdk
+          key: buildcache${{ github.run_number}}
+      - name: Get core count
+        id: core_count
+        run : cat /proc/cpuinfo  | grep processor | wc -l
       - name: Compile code
+        shell: bash
         run: |
           cd dsul
           mkdir -p build
-          cd build 
-          cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=1 .. 
-          make
-
+          cd build
+          cmake -DPICO_BOARD=${{ matrix.board }} -DPICO_SDK_PATH=$GITHUB_WORKSPACE/pico-sdk ..
+          make -j${{steps.core_count.outputs.output}}
+          ls -sh $GITHUB_WORKSPACE/dsul/build/dsul.uf2

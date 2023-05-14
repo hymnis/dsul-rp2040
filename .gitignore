@@ -11,3 +11,5 @@ todo.md
 *.bin
 *.eep
 *.uf2
+make.sh
+start-dev-container.sh

@@ -98,6 +98,21 @@ If there's no connection to the DSUL daemon (on the computer side), the LED will
 - 3/`flash`: Blinks the LED faster (flashes)
 - 4/`pulse`: Pulses the LED from min to max brightness
 
+
+## Building
+
+For list of boards with Pico SDK support, see [pico-sdk/src/boards/include/boards/](https://github.com/raspberrypi/pico-sdk/tree/master/src/boards/include/boards) in the Pico SDK repository.
+
+```bash
+cd dsul
+mkdir -p build
+cd build
+cmake -DPICO_BOARD=<board name> -DPICO_SDK_PATH=<pico sdk path> ..
+make
+```
+
 ## Computer software
 
-The software, daemon/server and client is available at [hymnis/dsul-python](https://github.com/hymnis/dsul-python) or [hymnis/dsul-go](https://github.com/hymnis/dsul-go).
+The software, daemon/server and client is available in different languages.
+- [hymnis/dsul-python](https://github.com/hymnis/dsul-python)
+- [hymnis/dsul-go](https://github.com/hymnis/dsul-go)
